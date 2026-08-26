@@ -1,3 +1,5 @@
+import json
+
 from django.test import RequestFactory, SimpleTestCase, override_settings
 
 from django_auth import Identity, identity_from_proxy, mock_identity
@@ -30,6 +32,10 @@ class IdentityTests(SimpleTestCase):
         request = RequestFactory().get("/", HTTP_X_AUTHENTIK_EMAIL="ada@example.com")
         self.assertIsNone(identity_from_proxy(request))
 
+    def test_username_is_used_when_name_is_missing(self):
+        request = RequestFactory().get("/", **{**SIGNED_IN, "HTTP_X_AUTHENTIK_NAME": ""})
+        self.assertEqual(identity_from_proxy(request).name, "ada")
+
     @override_settings(
         DEBUG=True,
         MOCK_USER_EMAIL="dev@example.com",
@@ -58,6 +64,28 @@ class AccessTests(SimpleTestCase):
         response = self.client.get("/private", **SIGNED_IN)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"user-123")
+
+    @override_settings(
+        DEBUG=True,
+        MOCK_USER_EMAIL="dev@example.com",
+        MOCK_USER_NAME="Dev",
+        MOCK_USER_ROLES=["member"],
+    )
+    def test_proxy_identity_wins_over_the_development_identity(self):
+        response = self.client.get("/private", **SIGNED_IN)
+        self.assertEqual(response.content, b"user-123")
+
+    def test_identity_is_shared_with_inertia_pages(self):
+        response = self.client.get("/inertia", HTTP_X_INERTIA="true", **SIGNED_IN)
+        self.assertEqual(
+            json.loads(response.content)["props"]["auth"]["user"],
+            {
+                "subject": "user-123",
+                "email": "ada@example.com",
+                "name": "Ada Admin",
+                "roles": ["admin", "member"],
+            },
+        )
 
     def test_role_view_allows_the_required_role(self):
         self.assertEqual(self.client.get("/admin", **SIGNED_IN).status_code, 200)
