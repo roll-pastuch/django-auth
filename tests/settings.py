@@ -2,6 +2,9 @@ DEBUG = False
 SECRET_KEY = "tests"
 ROOT_URLCONF = "tests.urls"
 ALLOWED_HOSTS = ["testserver"]
+DATABASES = {
+    "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": ":memory:"}
+}
 MOCK_USER_EMAIL = ""
 MOCK_USER_NAME = ""
 MOCK_USER_ROLES = []

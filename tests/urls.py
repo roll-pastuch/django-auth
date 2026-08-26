@@ -1,5 +1,5 @@
 from django.http import HttpResponse
-from django.urls import path
+from django.urls import include, path
 
 from django_auth import public, require_role
 from inertia import inertia
@@ -25,6 +25,7 @@ def inertia_view(request):
 
 
 urlpatterns = [
+    path("_auth/", include("django_auth.urls")),
     path("private", private_view),
     path("public", public_view),
     path("admin", admin_view),

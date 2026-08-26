@@ -3,7 +3,7 @@
 from .authentication import (
     Identity,
     IdentityMiddleware,
-    identity_from_proxy,
+    identity_from_claims,
     mock_identity,
     public,
     require_role,
@@ -12,7 +12,7 @@ from .authentication import (
 __all__ = [
     "Identity",
     "IdentityMiddleware",
-    "identity_from_proxy",
+    "identity_from_claims",
     "mock_identity",
     "public",
     "require_role",
